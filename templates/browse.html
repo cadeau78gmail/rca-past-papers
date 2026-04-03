@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Browse Papers — RCA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+
+        .navbar {
+            background: #003366;
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { font-size: 18px; }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+        }
+
+        .container { padding: 30px; max-width: 1000px; margin: 0 auto; }
+
+        .filters {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 24px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: flex-end;
+        }
+        .filter-group { flex: 1; min-width: 160px; }
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            color: #333;
+            font-weight: bold;
+            margin-bottom: 6px;
+        }
+        .filter-group input,
+        .filter-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+        }
+        .filters button {
+            padding: 10px 24px;
+            background: #003366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            cursor: pointer;
+            align-self: flex-end;
+        }
+
+        .results-title {
+            font-size: 18px;
+            color: #003366;
+            margin-bottom: 16px;
+        }
+
+        .paper-card {
+            background: white;
+            padding: 20px 24px;
+            border-radius: 10px;
+            margin-bottom: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.06);
+        }
+        .paper-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+
+        .paper-info h4 {
+            color: #003366;
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+        .paper-info p {
+            color: #666;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-left: 8px;
+        }
+        .badge-paper { background: #e0f0ff; color: #003366; }
+        .badge-note { background: #e0ffe0; color: #006600; }
+        .badge-mock { background: #fff0e0; color: #cc6600; }
+        .badge-assign { background: #f0e0ff; color: #660066; }
+
+        .btn-download {
+            background: #003366;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 6px;
+            text-decoration: none;
+            font-size: 14px;
+            white-space: nowrap;
+        }
+        .btn-download:hover { background: #00509e; }
+
+        .empty {
+            background: white;
+            padding: 60px;
+            border-radius: 10px;
+            text-align: center;
+            color: #666;
+        }
+        .empty h3 { color: #003366; margin-bottom: 10px; }
+
+        .back-link {
+            display: inline-block;
+            margin-bottom: 20px;
+            color: #003366;
+            text-decoration: none;
+            font-size: 14px;
+        }
+        .back-link:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>RCA Past Papers & Notes</h1>
+        <a href="/">Home</a>
+    </div>
+
+    <div class="container">
+        <a href="/" class="back-link">← Back to Home</a>
+
+        <div class="filters">
+            <form method="GET" action="/browse"
+                style="display:flex;gap:12px;width:100%;flex-wrap:wrap;">
+
+                <div class="filter-group">
+                    <label>Search</label>
+                    <input type="text" name="search"
+                        value="{{ search }}"
+                        placeholder="Search title..."/>
+                </div>
+
+                <div class="filter-group">
+                    <label>Subject</label>
+                    <select name="subject">
+                        <option value="">All Subjects</option>
+                        {% for subject in subjects %}
+                        <option value="{{ subject['id'] }}"
+                            {% if selected_subject == subject['id']|string %}
+                            selected{% endif %}>
+                            {{ subject['name'] }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Year</label>
+                    <select name="year">
+                        <option value="">All Years</option>
+                        {% for y in years %}
+                        <option value="{{ y }}"
+                            {% if selected_year == y|string %}
+                            selected{% endif %}>{{ y }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <div class="filter-group">
+                    <label>Type</label>
+                    <select name="paper_type">
+                        <option value="">All Types</option>
+                        <option value="Past Paper"
+                            {% if selected_type == 'Past Paper' %}selected{% endif %}>
+                            Past Paper</option>
+                        <option value="Notes"
+                            {% if selected_type == 'Notes' %}selected{% endif %}>
+                            Notes</option>
+                        <option value="Assignment"
+                            {% if selected_type == 'Assignment' %}selected{% endif %}>
+                            Assignment</option>
+                        <option value="Mock Exam"
+                            {% if selected_type == 'Mock Exam' %}selected{% endif %}>
+                            Mock Exam</option>
+                    </select>
+                </div>
+
+                <button type="submit">Search</button>
+            </form>
+        </div>
+
+        <div class="results-title">
+            {{ papers|length }} result(s) found
+        </div>
+
+        {% if papers %}
+            {% for paper in papers %}
+            <div class="paper-card">
+                <div class="paper-info">
+                    <h4>
+                        {{ paper['title'] }}
+                        {% if paper['paper_type'] == 'Past Paper' %}
+                        <span class="badge badge-paper">Past Paper</span>
+                        {% elif paper['paper_type'] == 'Notes' %}
+                        <span class="badge badge-note">Notes</span>
+                        {% elif paper['paper_type'] == 'Mock Exam' %}
+                        <span class="badge badge-mock">Mock Exam</span>
+                        {% else %}
+                        <span class="badge badge-assign">Assignment</span>
+                        {% endif %}
+                    </h4>
+                    <p>{{ paper['subject_name'] }} —
+                       {{ paper['year'] }} —
+                       Uploaded {{ paper['uploaded_at'][:10] }}</p>
+                </div>
+                <a href="/student-download/{{ paper['id'] }}"
+                    class="btn-download">Download</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="empty">
+                <h3>No papers found</h3>
+                <p>Try changing your search or filters.</p>
+            </div>
+        {% endif %}
+    </div>
+</body>
+</html>

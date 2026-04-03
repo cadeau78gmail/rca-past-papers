@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload Paper — RCA</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: Arial, sans-serif; background: #f0f2f5; }
+
+        .navbar {
+            background: #003366;
+            color: white;
+            padding: 16px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .navbar h1 { font-size: 18px; }
+        .navbar-links { display: flex; gap: 12px; }
+        .navbar a {
+            color: white;
+            text-decoration: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 14px;
+            background: rgba(255,255,255,0.15);
+        }
+        .navbar a:hover { background: rgba(255,255,255,0.25); }
+        .navbar a.logout { background: #cc0000; }
+        .navbar a.logout:hover { background: #aa0000; }
+
+        .container {
+            max-width: 650px;
+            margin: 40px auto;
+            padding: 0 20px;
+        }
+
+        .form-box {
+            background: white;
+            padding: 36px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+        }
+
+        .form-box h2 {
+            color: #003366;
+            margin-bottom: 6px;
+            font-size: 22px;
+        }
+        .form-box p.subtitle {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 28px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 6px;
+            color: #333;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 12px;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 14px;
+            font-family: Arial, sans-serif;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #003366;
+        }
+
+        .file-input {
+            border: 2px dashed #003366;
+            padding: 20px;
+            text-align: center;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            cursor: pointer;
+            background: #f8f9ff;
+        }
+        .file-input input {
+            margin-bottom: 0;
+            border: none;
+            background: transparent;
+            padding: 0;
+        }
+        .file-input p {
+            color: #666;
+            font-size: 13px;
+            margin-top: 8px;
+        }
+
+        button {
+            width: 100%;
+            padding: 14px;
+            background: #003366;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            font-size: 16px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover { background: #00509e; }
+
+        .success {
+            background: #e0ffe0;
+            color: #006600;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+        .error {
+            background: #ffe0e0;
+            color: #cc0000;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            font-size: 14px;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <h1>Rwanda Coding Academy — Past Papers System</h1>
+        <div class="navbar-links">
+            <a href="/dashboard">Dashboard</a>
+            <a href="/papers">View Papers</a>
+            <a href="/logout" class="logout">Logout</a>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="form-box">
+            <h2>Upload New Paper / Note</h2>
+            <p class="subtitle">Fill in the details and upload the file below.</p>
+
+            {% if success %}
+            <div class="success">{{ success }}</div>
+            {% endif %}
+
+            {% if error %}
+            <div class="error">{{ error }}</div>
+            {% endif %}
+
+            <form method="POST" action="/upload" enctype="multipart/form-data">
+
+                <label>Title</label>
+                <input type="text" name="title"
+                    placeholder="e.g. Mathematics Final Exam 2023" required/>
+
+                <label>Subject</label>
+                <select name="subject_id" required>
+                    <option value="">-- Select Subject --</option>
+                    {% for subject in subjects %}
+                    <option value="{{ subject['id'] }}">{{ subject['name'] }}</option>
+                    {% endfor %}
+                </select>
+
+                <label>Year</label>
+                <select name="year" required>
+    <option value="">-- Select Year --</option>
+    {% for y in years %}
+    <option value="{{ y }}" {% if y == current_year %}selected{% endif %}>{{ y }}</option>
+    {% endfor %}
+</select>
+
+                <label>Type</label>
+                <select name="paper_type" required>
+                    <option value="">-- Select Type --</option>
+                    <option value="Past Paper">Past Paper</option>
+                    <option value="Notes">Notes</option>
+                    <option value="Assignment">Assignment</option>
+                    <option value="Mock Exam">Mock Exam</option>
+                </select>
+
+                <label>Description (optional)</label>
+                <textarea name="description" rows="3"
+                    placeholder="Brief description of this paper or note..."></textarea>
+
+                <label>File</label>
+                <div class="file-input">
+                    <input type="file" name="file"
+                        accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" required/>
+                    <p>Accepted: PDF, Word documents, Images</p>
+                </div>
+
+                <button type="submit">Upload Paper / Note</button>
+            </form>
+        </div>
+    </div>
+</body>
+</html>
