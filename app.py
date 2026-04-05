@@ -284,5 +284,28 @@ def logout():
     session.clear()
     return redirect('/home')
 
+ def initialize():
+    if not os.path.exists('database'):
+        os.makedirs('database')
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
+    from database import create_database
+    create_database()
+    conn = get_db()
+    existing = conn.execute(
+        'SELECT * FROM users WHERE username = ?', ('admin',)
+    ).fetchone()
+    if not existing:
+        from werkzeug.security import generate_password_hash
+        password = generate_password_hash('rca2024')
+        conn.execute(
+            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+            ('admin', password, 'admin')
+        )
+        conn.commit()
+    conn.close()
+
+initialize()
+
 if __name__ == '__main__':
     app.run(debug=True)
