@@ -20,6 +20,27 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def initialize():
+    if not os.path.exists('database'):
+        os.makedirs('database')
+    if not os.path.exists('uploads'):
+        os.makedirs('uploads')
+    from database import create_database
+    create_database()
+    conn = get_db()
+    existing = conn.execute(
+        'SELECT * FROM users WHERE username = ?', ('admin',)
+    ).fetchone()
+    if not existing:
+        from werkzeug.security import generate_password_hash
+        password = generate_password_hash('rca2024')
+        conn.execute(
+            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
+            ('admin', password, 'admin')
+        )
+        conn.commit()
+    conn.close()
+
 @app.route('/')
 def home():
     return redirect('/home')
@@ -58,18 +79,15 @@ def browse():
     subjects = conn.execute(
         'SELECT * FROM subjects').fetchall()
     years = list(range(datetime.now().year, 2019, -1))
-
     search = request.args.get('search', '')
     selected_subject = request.args.get('subject', '')
     selected_year = request.args.get('year', '')
     selected_type = request.args.get('paper_type', '')
-
     query = '''SELECT papers.*, subjects.name as subject_name
                FROM papers JOIN subjects
                ON papers.subject_id = subjects.id
                WHERE 1=1'''
     params = []
-
     if search:
         query += ' AND papers.title LIKE ?'
         params.append('%' + search + '%')
@@ -82,11 +100,9 @@ def browse():
     if selected_type:
         query += ' AND papers.paper_type = ?'
         params.append(selected_type)
-
     query += ' ORDER BY papers.uploaded_at DESC'
     all_papers = conn.execute(query, params).fetchall()
     conn.close()
-
     return render_template('browse.html',
         papers=all_papers,
         subjects=subjects,
@@ -164,12 +180,10 @@ def dashboard():
 def upload():
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     subjects = conn.execute('SELECT * FROM subjects').fetchall()
     current_year = datetime.now().year
     years = list(range(current_year, 2019, -1))
-
     if request.method == 'POST':
         title = request.form['title']
         subject_id = request.form['subject_id']
@@ -177,13 +191,11 @@ def upload():
         paper_type = request.form['paper_type']
         description = request.form['description']
         file = request.files['file']
-
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
             file_path = os.path.join(UPLOAD_FOLDER, filename)
             file.save(file_path)
             file_type = filename.rsplit('.', 1)[1].lower()
-
             conn.execute('''
                 INSERT INTO papers
                 (title, subject_id, year, paper_type,
@@ -205,7 +217,6 @@ def upload():
                 years=years,
                 current_year=current_year,
                 error='Invalid file type!')
-
     conn.close()
     return render_template('upload.html',
         subjects=subjects,
@@ -216,29 +227,24 @@ def upload():
 def papers():
     if 'user_id' not in session:
         return redirect('/login')
-
     conn = get_db()
     subjects = conn.execute('SELECT * FROM subjects').fetchall()
     selected_subject = request.args.get('subject', '')
     selected_type = request.args.get('paper_type', '')
-
     query = '''SELECT papers.*, subjects.name as subject_name
                FROM papers JOIN subjects
                ON papers.subject_id = subjects.id
                WHERE 1=1'''
     params = []
-
     if selected_subject:
         query += ' AND papers.subject_id = ?'
         params.append(selected_subject)
     if selected_type:
         query += ' AND papers.paper_type = ?'
         params.append(selected_type)
-
     query += ' ORDER BY papers.uploaded_at DESC'
     all_papers = conn.execute(query, params).fetchall()
     conn.close()
-
     return render_template('papers.html',
         papers=all_papers,
         subjects=subjects,
@@ -283,27 +289,6 @@ def delete(paper_id):
 def logout():
     session.clear()
     return redirect('/home')
-
- def initialize():
-    if not os.path.exists('database'):
-        os.makedirs('database')
-    if not os.path.exists('uploads'):
-        os.makedirs('uploads')
-    from database import create_database
-    create_database()
-    conn = get_db()
-    existing = conn.execute(
-        'SELECT * FROM users WHERE username = ?', ('admin',)
-    ).fetchone()
-    if not existing:
-        from werkzeug.security import generate_password_hash
-        password = generate_password_hash('rca2024')
-        conn.execute(
-            'INSERT INTO users (username, password, role) VALUES (?, ?, ?)',
-            ('admin', password, 'admin')
-        )
-        conn.commit()
-    conn.close()
 
 initialize()
 
