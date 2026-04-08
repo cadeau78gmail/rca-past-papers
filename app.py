@@ -20,6 +20,15 @@ def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+def get_academic_years():
+    conn = get_db()
+    years = conn.execute(
+        'SELECT DISTINCT year FROM subjects ORDER BY year'
+    ).fetchall()
+    conn.close()
+    year_list = [row['year'] for row in years]
+    return year_list if year_list else [1, 2, 3]
+
 def initialize():
     if not os.path.exists('database'):
         os.makedirs('database')
@@ -66,19 +75,28 @@ def index():
         ORDER BY papers.uploaded_at DESC LIMIT 5
     ''').fetchall()
     conn.close()
+
+    years = get_academic_years()
+    subjects_by_year = {
+        year: [subject for subject in subjects if subject['year'] == year]
+        for year in years
+    }
+    current_year = years[-1] if years else 1
+
     return render_template('index.html',
-        subjects=subjects,
+        subjects_by_year=subjects_by_year,
+        years=years,
         total_papers=total_papers,
         total_subjects=total_subjects,
         recent_papers=recent_papers,
-        current_year=datetime.now().year)
+        current_year=current_year)
 
 @app.route('/browse')
 def browse():
     conn = get_db()
     subjects = conn.execute(
         'SELECT * FROM subjects').fetchall()
-    years = list(range(datetime.now().year, 2019, -1))
+    years = get_academic_years()
     search = request.args.get('search', '')
     selected_subject = request.args.get('subject', '')
     selected_year = request.args.get('year', '')
@@ -182,8 +200,8 @@ def upload():
         return redirect('/login')
     conn = get_db()
     subjects = conn.execute('SELECT * FROM subjects').fetchall()
-    current_year = datetime.now().year
-    years = list(range(current_year, 2019, -1))
+    years = get_academic_years()
+    current_year = years[-1] if years else 1
     if request.method == 'POST':
         title = request.form['title']
         subject_id = request.form['subject_id']

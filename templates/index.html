@@ -181,7 +181,7 @@
 
     <div class="hero">
         <h2>Find Your Past Papers & Notes</h2>
-        <p>Access all Rwanda Coding Academy Year 1 study materials in one place</p>
+        <p>Access all Rwanda Coding Academy Years 1, 2, and 3 study materials in one place</p>
         <form method="GET" action="/browse">
             <div class="search-bar">
                 <input type="text" name="search"
@@ -204,20 +204,22 @@
             </div>
             <div class="stat-card">
                 <h3>{{ current_year }}</h3>
-                <p>Latest Year</p>
+                <p>Latest Academic Year</p>
             </div>
         </div>
 
-        <div class="section-title">Browse by Subject</div>
+        {% for year in years %}
+        <div class="section-title">Year {{ year }} Subjects</div>
         <div class="subjects-grid">
-            {% for subject in subjects %}
+            {% for subject in subjects_by_year[year] %}
             <a href="/browse?subject={{ subject['id'] }}"
                 class="subject-card">
                 <h3>{{ subject['name'] }}</h3>
-                <p>{{ subject['paper_count'] }} file(s)</p>
+                <p>Year {{ subject['year'] }} — {{ subject['paper_count'] }} file(s)</p>
             </a>
             {% endfor %}
         </div>
+        {% endfor %}
 
         {% if recent_papers %}
         <div class="recent-section">
@@ -248,7 +250,7 @@
     </div>
 
     <footer>
-        Rwanda Coding Academy Past Papers & Notes System — Year 1
+        Rwanda Coding Academy Past Papers & Notes System — Years 1-3
     </footer>
 </body>
 </html>
