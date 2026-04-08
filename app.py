@@ -81,7 +81,7 @@ def index():
         year: [subject for subject in subjects if subject['year'] == year]
         for year in years
     }
-    current_year = years[-1] if years else 1
+    current_year = datetime.now().year
 
     return render_template('index.html',
         subjects_by_year=subjects_by_year,
